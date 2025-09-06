@@ -1,77 +1,23 @@
 import json
 import pickle
-import subprocess
-import sys
 from pathlib import Path
 from typing import Dict, Any
 
 import pandas as pd
 import streamlit as st
-import sklearn
 
 MODEL_PATH = Path('rainfall_prediction_model.pkl')
 METRICS_PATH = Path('training_metrics.json')
 
-def _attempt_retrain() -> bool:
-    """Retrain model in-place if CSV & training script exist.
-    Returns True on success, False otherwise."""
-    csv = Path('Rainfall.csv')
-    trainer = Path('rainfall_prediction_using_machine_learning.py')
-    if not csv.exists() or not trainer.exists():
-        return False
-    cmd = [sys.executable, str(trainer), 'train', '--data', str(csv), '--no-gridsearch', '--no-plots']
-    try:
-        subprocess.run(cmd, check=True, capture_output=True, text=True)
-        return True
-    except Exception as e:  # pragma: no cover - defensive
-        st.error(f"Auto-retrain failed: {e}")
-        return False
-
 @st.cache_resource(show_spinner=False)
 def load_model():
     if not MODEL_PATH.exists():
-        st.warning('Model file missing; attempting automatic retrain...')
-        if not _attempt_retrain():
-            st.error('Model not found and retrain failed. Provide rainfall_prediction_model.pkl or Rainfall.csv.')
-            st.stop()
-    try:
-        with open(MODEL_PATH,'rb') as f:
-            obj = pickle.load(f)
-        # If metrics file exists, compare sklearn versions
-        metrics_path = Path('training_metrics.json')
-        if metrics_path.exists():
-            try:
-                meta = json.loads(metrics_path.read_text(encoding='utf-8'))
-                saved_version = meta.get('sklearn_version')
-                if saved_version and saved_version != sklearn.__version__:
-                    st.warning(f"Sklearn version mismatch (saved {saved_version} vs runtime {sklearn.__version__}); retraining.")
-                    MODEL_PATH.unlink(missing_ok=True)
-                    if _attempt_retrain():
-                        with open(MODEL_PATH,'rb') as f:
-                            obj = pickle.load(f)
-                        st.success('Retrained with current sklearn version.')
-                    else:
-                        st.error('Retrain failed during version mismatch handling.')
-                        st.stop()
-            except Exception:
-                pass
-        return obj['model'], obj['feature_names']
-    except Exception as e:  # Likely version mismatch / incompatible pickle
-        st.warning(f"Model load failed ({e.__class__.__name__}: {e}). Deleting old pickle and retraining (sklearn {sklearn.__version__})...")
-        try:
-            MODEL_PATH.unlink(missing_ok=True)
-        except Exception:
-            pass
-        if _attempt_retrain():
-            try:
-                with open(MODEL_PATH,'rb') as f:
-                    obj = pickle.load(f)
-                st.success('Model retrained successfully in current environment.')
-                return obj['model'], obj['feature_names']
-            except Exception as e2:
-                st.error(f'Retrain produced an unreadable pickle: {e2}')
-        st.error('Could not load or retrain model. Provide Rainfall.csv and retry.')
+        st.error('Model not found. Train first using the CLI command:')
+        st.code('python rainfall_prediction_using_machine_learning.py train --data Rainfall.csv --no-gridsearch --no-plots')
         st.stop()
+    with open(MODEL_PATH,'rb') as f:
+        obj = pickle.load(f)
+    return obj['model'], obj['feature_names']
 
 @st.cache_data(show_spinner=False)
 def load_metrics():
@@ -143,4 +89,3 @@ if metrics and metrics.get('feature_importances'):
 
 st.markdown('---')
 st.caption('Deploy via: streamlit run streamlit_app.py')
-st.caption(f'Running sklearn {sklearn.__version__}. Incompatible pickle triggers auto retrain.')
