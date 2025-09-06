@@ -7,6 +7,7 @@ from typing import Dict, Any
 
 import pandas as pd
 import streamlit as st
+import sklearn
 
 MODEL_PATH = Path('rainfall_prediction_model.pkl')
 METRICS_PATH = Path('training_metrics.json')
@@ -38,13 +39,20 @@ def load_model():
             obj = pickle.load(f)
         return obj['model'], obj['feature_names']
     except Exception as e:  # Likely version mismatch / incompatible pickle
-        st.warning(f"Model load failed ({e.__class__.__name__}: {e}). Attempting retrain with current environment...")
+        st.warning(f"Model load failed ({e.__class__.__name__}: {e}). Deleting old pickle and retraining (sklearn {sklearn.__version__})...")
+        try:
+            MODEL_PATH.unlink(missing_ok=True)
+        except Exception:
+            pass
         if _attempt_retrain():
-            with open(MODEL_PATH,'rb') as f:
-                obj = pickle.load(f)
-            st.success('Model retrained successfully in current environment.')
-            return obj['model'], obj['feature_names']
-        st.error('Could not load or retrain model. See logs.')
+            try:
+                with open(MODEL_PATH,'rb') as f:
+                    obj = pickle.load(f)
+                st.success('Model retrained successfully in current environment.')
+                return obj['model'], obj['feature_names']
+            except Exception as e2:
+                st.error(f'Retrain produced an unreadable pickle: {e2}')
+        st.error('Could not load or retrain model. Provide Rainfall.csv and retry.')
         st.stop()
 
 @st.cache_data(show_spinner=False)
@@ -117,4 +125,4 @@ if metrics and metrics.get('feature_importances'):
 
 st.markdown('---')
 st.caption('Deploy via: streamlit run streamlit_app.py')
-st.caption('If the original pickle is incompatible, the app auto-retrains using Rainfall.csv.')
+st.caption(f'Running sklearn {sklearn.__version__}. Incompatible pickle triggers auto retrain.')

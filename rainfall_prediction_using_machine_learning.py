@@ -63,6 +63,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 import pickle
 import streamlit as st
+import sklearn
 
 LOG = logging.getLogger("rainfall")
 
@@ -234,6 +235,7 @@ def evaluate_and_save(model: RandomForestClassifier, X_train, X_test, y_train, y
     "n_test_samples": int(getattr(X_test, 'shape', [len(X_test)])[0]),
     "feature_count": len(feature_names),
     "feature_importances": feat_importances,
+  "sklearn_version": sklearn.__version__,
     "timestamp": datetime.now(timezone.utc).isoformat()
   }
   with open(metrics_path, "w", encoding="utf-8") as f:
