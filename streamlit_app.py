@@ -1,5 +1,7 @@
 import json
 import pickle
+import subprocess
+import sys
 from pathlib import Path
 from typing import Dict, Any
 
@@ -9,15 +11,41 @@ import streamlit as st
 MODEL_PATH = Path('rainfall_prediction_model.pkl')
 METRICS_PATH = Path('training_metrics.json')
 
+def _attempt_retrain() -> bool:
+    """Retrain model in-place if CSV & training script exist.
+    Returns True on success, False otherwise."""
+    csv = Path('Rainfall.csv')
+    trainer = Path('rainfall_prediction_using_machine_learning.py')
+    if not csv.exists() or not trainer.exists():
+        return False
+    cmd = [sys.executable, str(trainer), 'train', '--data', str(csv), '--no-gridsearch', '--no-plots']
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+        return True
+    except Exception as e:  # pragma: no cover - defensive
+        st.error(f"Auto-retrain failed: {e}")
+        return False
+
 @st.cache_resource(show_spinner=False)
 def load_model():
     if not MODEL_PATH.exists():
-        st.error('Model not found. Train first using the CLI command:')
-        st.code('python rainfall_prediction_using_machine_learning.py train --data Rainfall.csv --no-gridsearch --no-plots')
+        st.warning('Model file missing; attempting automatic retrain...')
+        if not _attempt_retrain():
+            st.error('Model not found and retrain failed. Provide rainfall_prediction_model.pkl or Rainfall.csv.')
+            st.stop()
+    try:
+        with open(MODEL_PATH,'rb') as f:
+            obj = pickle.load(f)
+        return obj['model'], obj['feature_names']
+    except Exception as e:  # Likely version mismatch / incompatible pickle
+        st.warning(f"Model load failed ({e.__class__.__name__}: {e}). Attempting retrain with current environment...")
+        if _attempt_retrain():
+            with open(MODEL_PATH,'rb') as f:
+                obj = pickle.load(f)
+            st.success('Model retrained successfully in current environment.')
+            return obj['model'], obj['feature_names']
+        st.error('Could not load or retrain model. See logs.')
         st.stop()
-    with open(MODEL_PATH,'rb') as f:
-        obj = pickle.load(f)
-    return obj['model'], obj['feature_names']
 
 @st.cache_data(show_spinner=False)
 def load_metrics():
@@ -89,3 +117,4 @@ if metrics and metrics.get('feature_importances'):
 
 st.markdown('---')
 st.caption('Deploy via: streamlit run streamlit_app.py')
+st.caption('If the original pickle is incompatible, the app auto-retrains using Rainfall.csv.')
