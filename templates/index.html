@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rainfall Prediction Dashboard</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Rainfall Predictor</h1>
+      <div class="subtitle">RandomForest • Single Sample Inference</div>
+    </div>
+    <div class="badge" id="model-meta">Loading model...</div>
+  </header>
+
+  <main>
+    <section class="panel" id="form-panel">
+      <h2>Input Features</h2>
+      <form id="predict-form" class="grid-form">
+        {% for f in features %}
+        <div class="field">
+          <label for="{{f}}">{{f}}</label>
+          <input type="number" step="any" id="{{f}}" name="{{f}}" placeholder="0" />
+        </div>
+        {% endfor %}
+        <div class="field" style="grid-column:1/-1;">
+          <label for="threshold">threshold (0-1)</label>
+          <input type="number" step="any" min="0" max="1" id="threshold" name="threshold" placeholder="auto" />
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit" id="predict-btn">Predict</button>
+          <button class="secondary" type="button" id="reset-btn">Reset</button>
+          <button class="secondary" type="button" id="fill-demo-btn">Demo Fill</button>
+        </div>
+      </form>
+      <div id="prediction-output" class="result-block" style="display:none;"></div>
+      <div class="prob-bar-wrap" style="display:none;" id="prob-wrap">
+        <div class="prob-bar-label"><span>Rainfall Probability</span><span id="prob-val">0.00</span></div>
+        <div class="prob-bar"><span id="prob-bar-span"></span></div>
+      </div>
+    </section>
+
+    <section class="panel" id="feature-panel">
+      <h2>Feature Importances</h2>
+      <table class="feature-table" id="feat-table">
+        <thead><tr><th>Feature</th><th>Importance</th></tr></thead>
+        <tbody id="feat-tbody"><tr><td colspan="2" style="opacity:.6;">Loading...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    Rainfall Predictor Demo • <span id="year"></span>
+  </footer>
+
+  <script>
+    const form = document.getElementById('predict-form');
+    const output = document.getElementById('prediction-output');
+    const probWrap = document.getElementById('prob-wrap');
+    const probVal = document.getElementById('prob-val');
+    const probBarSpan = document.getElementById('prob-bar-span');
+    const resetBtn = document.getElementById('reset-btn');
+    const fillDemoBtn = document.getElementById('fill-demo-btn');
+    const modelMeta = document.getElementById('model-meta');
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    async function fetchFeatureImportances(){
+      try {
+        const res = await fetch('/api/feature-importances');
+        const data = await res.json();
+        const tbody = document.getElementById('feat-tbody');
+        tbody.innerHTML = '';
+        if(!data.feature_importances || data.feature_importances.length===0){
+          tbody.innerHTML = '<tr><td colspan="2" style="opacity:.6;">No feature importance data</td></tr>';
+          return;
+        }
+        data.feature_importances.forEach(f => {
+          const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${f.feature}</td><td>${f.importance.toFixed(4)}</td>`;
+          tbody.appendChild(tr);
+        });
+      } catch(e){
+        console.error(e);
+      }
+    }
+
+    function gatherPayload(){
+      const payload = {};
+      const inputs = form.querySelectorAll('input');
+      inputs.forEach(inp => {
+        if(inp.value !== '' && inp.name){ payload[inp.name] = Number(inp.value); }
+      });
+      return payload;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = gatherPayload();
+      output.style.display = 'block';
+      output.textContent = 'Predicting...';
+      try {
+        const res = await fetch('/api/predict', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+        if(!res.ok) throw new Error('Request failed');
+        const data = await res.json();
+        const prob = data.rainfall_probability;
+        output.innerHTML = `<div><span class='k'>Prediction:</span> <span class='v'>${data.label}</span> <span class='result-inline'>(class=${data.prediction})</span></div>
+        <div><span class='k'>Threshold:</span> <span class='v'>${data.threshold ?? 'model default'}</span></div>`;
+        if(prob !== null){
+          probWrap.style.display='block';
+          probVal.textContent = prob.toFixed(3);
+          probBarSpan.style.width = Math.min(100, prob*100).toFixed(1)+'%';
+        } else {
+          probWrap.style.display='none';
+        }
+      } catch(err){
+        output.innerHTML = `<span style='color:#f87171;'>Error: ${err.message}</span>`;
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      form.reset();
+      output.style.display='none';
+      probWrap.style.display='none';
+    });
+
+    fillDemoBtn.addEventListener('click', () => {
+      // Fill a plausible rainy scenario
+      const demo = {
+        humidity: 85, cloud: 70, sunshine: 2, pressure: 1012, dewpoint: 7, windspeed: 12
+      };
+      Object.entries(demo).forEach(([k,v]) => {
+        const el = form.querySelector(`[name="${k}"]`);
+        if(el) el.value = v;
+      });
+    });
+
+    fetchFeatureImportances();
+    modelMeta.textContent = 'Model Loaded';
+  </script>
+</body>
+</html>

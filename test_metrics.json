@@ -1,0 +1,108 @@
+{
+  "best_params": {
+    "bootstrap": true,
+    "ccp_alpha": 0.0,
+    "class_weight": null,
+    "criterion": "gini",
+    "max_depth": null,
+    "max_features": "sqrt",
+    "max_leaf_nodes": null,
+    "max_samples": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 1,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0.0,
+    "n_estimators": 100,
+    "n_jobs": null,
+    "oob_score": false,
+    "random_state": 42,
+    "verbose": 0,
+    "warm_start": false
+  },
+  "test_accuracy": 1.0,
+  "confusion_matrix": [
+    [
+      2,
+      0
+    ],
+    [
+      0,
+      2
+    ]
+  ],
+  "classification_report": {
+    "0": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2
+    },
+    "1": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 4
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 4
+    }
+  },
+  "cv_scores": [
+    1.0,
+    1.0,
+    0.5
+  ],
+  "cv_mean": 0.8333333333333334,
+  "n_train_samples": 14,
+  "n_test_samples": 4,
+  "feature_count": 9,
+  "feature_importances": [
+    {
+      "feature": "sunshine",
+      "importance": 0.38971441197691203
+    },
+    {
+      "feature": "cloud",
+      "importance": 0.22255418098215718
+    },
+    {
+      "feature": "dewpoint",
+      "importance": 0.11092321127946128
+    },
+    {
+      "feature": "pressure",
+      "importance": 0.10260727685013402
+    },
+    {
+      "feature": "humidity",
+      "importance": 0.09018786876703541
+    },
+    {
+      "feature": "windspeed",
+      "importance": 0.057668308080808105
+    },
+    {
+      "feature": "winddirection_S",
+      "importance": 0.011646990740740742
+    },
+    {
+      "feature": "winddirection_W",
+      "importance": 0.008697751322751322
+    },
+    {
+      "feature": "winddirection_N",
+      "importance": 0.006000000000000002
+    }
+  ],
+  "timestamp": "2025-09-06T08:52:25.900049+00:00"
+}
