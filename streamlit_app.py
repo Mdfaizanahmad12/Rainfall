@@ -37,6 +37,24 @@ def load_model():
     try:
         with open(MODEL_PATH,'rb') as f:
             obj = pickle.load(f)
+        # If metrics file exists, compare sklearn versions
+        metrics_path = Path('training_metrics.json')
+        if metrics_path.exists():
+            try:
+                meta = json.loads(metrics_path.read_text(encoding='utf-8'))
+                saved_version = meta.get('sklearn_version')
+                if saved_version and saved_version != sklearn.__version__:
+                    st.warning(f"Sklearn version mismatch (saved {saved_version} vs runtime {sklearn.__version__}); retraining.")
+                    MODEL_PATH.unlink(missing_ok=True)
+                    if _attempt_retrain():
+                        with open(MODEL_PATH,'rb') as f:
+                            obj = pickle.load(f)
+                        st.success('Retrained with current sklearn version.')
+                    else:
+                        st.error('Retrain failed during version mismatch handling.')
+                        st.stop()
+            except Exception:
+                pass
         return obj['model'], obj['feature_names']
     except Exception as e:  # Likely version mismatch / incompatible pickle
         st.warning(f"Model load failed ({e.__class__.__name__}: {e}). Deleting old pickle and retraining (sklearn {sklearn.__version__})...")
