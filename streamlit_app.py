@@ -7,16 +7,16 @@ from typing import Dict, Any, Tuple
 import pandas as pd
 import streamlit as st
 import sklearn
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 
 MODEL_PATH = Path('rainfall_prediction_model.pkl')
 METRICS_PATH = Path('training_metrics.json')
 DATA_PATH = Path('Rainfall.csv')
 SKLEARN_VER = sklearn.__version__
 
-def ensure_dataset(min_rows: int = 120):
+def ensure_dataset(min_rows: int = 60):
     if DATA_PATH.exists():
         try:
             df = pd.read_csv(DATA_PATH)
@@ -153,9 +153,19 @@ st.set_page_config(page_title='Rainfall Prediction', page_icon='🌧', layout='w
 st.title('🌧 Rainfall Prediction')
 st.caption(f'RandomForest single inference • sklearn {SKLEARN_VER}')
 
+# Immediate placeholder so something renders even if training takes time
+init_box = st.empty()
+init_box.info('Initializing / loading model ...')
+
 with st.sidebar:
     st.header('Model')
-    model, feature_names = load_model()
+    try:
+        with st.spinner('Loading or training model...'):
+            model, feature_names = load_model()
+    except Exception as e:
+        st.error(f'Fatal error loading model: {e}')
+        st.stop()
+    init_box.empty()
     metrics = load_metrics()
     if metrics:
         col1, col2 = st.columns(2)
@@ -197,3 +207,11 @@ if metrics and metrics.get('feature_importances'):
 
 st.markdown('---')
 st.caption('Auto-trains if model missing or incompatible. Use Force Retrain to refresh.')
+
+# Command to run the training outside of Streamlit (for reference)
+# !python rainfall_prediction_using_machine_learning.py train --data Rainfall.csv --no-gridsearch --no-plots --model-out rainfall_prediction_model.pkl --metrics-out training_metrics.json
+
+# To run the Streamlit app, use the following command in the terminal:
+# streamlit run streamlit_app.py --server.port 8501
+
+# (Removed stray raw pip command that caused a syntax error.)

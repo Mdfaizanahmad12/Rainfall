@@ -1,108 +1,55 @@
 {
-  "best_params": {
-    "bootstrap": true,
-    "ccp_alpha": 0.0,
-    "class_weight": null,
-    "criterion": "gini",
-    "max_depth": null,
-    "max_features": "sqrt",
-    "max_leaf_nodes": null,
-    "max_samples": null,
-    "min_impurity_decrease": 0.0,
-    "min_samples_leaf": 1,
-    "min_samples_split": 2,
-    "min_weight_fraction_leaf": 0.0,
-    "n_estimators": 100,
-    "n_jobs": null,
-    "oob_score": false,
-    "random_state": 42,
-    "verbose": 0,
-    "warm_start": false
-  },
-  "test_accuracy": 1.0,
-  "confusion_matrix": [
-    [
-      2,
-      0
-    ],
-    [
-      0,
-      2
-    ]
-  ],
-  "classification_report": {
-    "0": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 2
-    },
-    "1": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 2
-    },
-    "accuracy": 1.0,
-    "macro avg": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 4
-    },
-    "weighted avg": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 4
-    }
-  },
-  "cv_scores": [
-    1.0,
-    1.0,
-    0.5
-  ],
-  "cv_mean": 0.8333333333333334,
-  "n_train_samples": 14,
-  "n_test_samples": 4,
-  "feature_count": 9,
+  "test_accuracy": 0.9833333333333333,
   "feature_importances": [
     {
       "feature": "sunshine",
-      "importance": 0.38971441197691203
+      "importance": 0.32986196453306554
     },
     {
-      "feature": "cloud",
-      "importance": 0.22255418098215718
-    },
-    {
-      "feature": "dewpoint",
-      "importance": 0.11092321127946128
-    },
-    {
-      "feature": "pressure",
-      "importance": 0.10260727685013402
-    },
-    {
-      "feature": "humidity",
-      "importance": 0.09018786876703541
+      "feature": "maxtemp",
+      "importance": 0.12713309527964353
     },
     {
       "feature": "windspeed",
-      "importance": 0.057668308080808105
+      "importance": 0.09783170529529678
     },
     {
-      "feature": "winddirection_S",
-      "importance": 0.011646990740740742
+      "feature": "cloud",
+      "importance": 0.09537023890966448
+    },
+    {
+      "feature": "mintemp",
+      "importance": 0.08933697264543963
+    },
+    {
+      "feature": "humidity",
+      "importance": 0.08590120962742555
+    },
+    {
+      "feature": "pressure",
+      "importance": 0.05418420955442488
+    },
+    {
+      "feature": "dewpoint",
+      "importance": 0.05286234974606873
+    },
+    {
+      "feature": "temparature",
+      "importance": 0.04380524447779321
     },
     {
       "feature": "winddirection_W",
-      "importance": 0.008697751322751322
+      "importance": 0.008684886220632371
+    },
+    {
+      "feature": "winddirection_S",
+      "importance": 0.0076919599657631595
     },
     {
       "feature": "winddirection_N",
-      "importance": 0.006000000000000002
+      "importance": 0.007336163744782041
     }
   ],
-  "timestamp": "2025-09-06T08:51:50.671774+00:00"
+  "n_features": 12,
+  "sklearn_version": "1.7.1"
 }
